@@ -20,6 +20,24 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        ProcessInput();
+        WrapPlayerOnScreen();
+    }
+
+    private void FixedUpdate()
+    {
+        if (movementDirection == Vector3.zero)
+        {
+            return;
+        }
+
+        rb.AddForce(movementDirection * forceMagnitude, ForceMode.Force);
+
+        rb.linearVelocity = Vector3.ClampMagnitude(rb.linearVelocity, maxVelocity);
+    }
+
+    private void ProcessInput()
+    {
         TouchControl primaryTouch = Touchscreen.current.primaryTouch;
 
         if (!primaryTouch.press.isPressed)
@@ -36,15 +54,16 @@ public class PlayerMovement : MonoBehaviour
         movementDirection.Normalize();
     }
 
-    private void FixedUpdate()
+    private void WrapPlayerOnScreen()
     {
-        if (movementDirection == Vector3.zero)
-        {
-            return;
-        }
+        Vector3 viewportPosition = mainCamera.WorldToViewportPoint(transform.position);
 
-        rb.AddForce(movementDirection * forceMagnitude, ForceMode.Force);
+        if (viewportPosition.x > 1) viewportPosition.x -= 1;
+        else if (viewportPosition.x < 0) viewportPosition.x += 1;
 
-        rb.linearVelocity = Vector3.ClampMagnitude(rb.linearVelocity, maxVelocity);
+        if (viewportPosition.y > 1) viewportPosition.y -= 1;
+        else if (viewportPosition.y < 0) viewportPosition.y += 1;
+
+        transform.position = mainCamera.ViewportToWorldPoint(viewportPosition);
     }
 }
